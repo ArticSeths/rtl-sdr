@@ -64,13 +64,15 @@ static pthread_mutex_t exit_cond_lock;
 static pthread_mutex_t ll_mutex;
 static pthread_cond_t cond;
 
-struct llist {
+struct llist
+{
 	char *data;
 	size_t len;
 	struct llist *next;
 };
 
-typedef struct { /* structure size must be multiple of 2 bytes */
+typedef struct
+{ /* structure size must be multiple of 2 bytes */
 	char magic[4];
 	uint32_t tuner_type;
 	uint32_t tuner_gain_count;
@@ -87,24 +89,25 @@ static volatile int do_exit = 0;
 void usage(void)
 {
 	printf("rtl_tcp, an I/Q spectrum server for RTL2832 based DVB-T receivers\n\n"
-		"Usage:\t[-a listen address]\n"
-		"\t[-p listen port (default: 1234)]\n"
-		"\t[-f frequency to tune to [Hz]]\n"
-		"\t[-g gain (default: 0 for auto)]\n"
-		"\t[-s samplerate in Hz (default: 2048000 Hz)]\n"
-		"\t[-b number of buffers (default: 15, set by library)]\n"
-		"\t[-n max number of linked list buffers to keep (default: 500)]\n"
-		"\t[-d device index (default: 0)]\n"
-		"\t[-P ppm_error (default: 0)]\n");
+		   "Usage:\t[-a listen address]\n"
+		   "\t[-p listen port (default: 1234)]\n"
+		   "\t[-f frequency to tune to [Hz]]\n"
+		   "\t[-g gain (default: 0 for auto)]\n"
+		   "\t[-s samplerate in Hz (default: 2048000 Hz)]\n"
+		   "\t[-b number of buffers (default: 15, set by library)]\n"
+		   "\t[-n max number of linked list buffers to keep (default: 500)]\n"
+		   "\t[-d device index (default: 0)]\n"
+		   "\t[-P ppm_error (default: 0)]\n");
 	exit(1);
 }
 
 #ifdef _WIN32
-int gettimeofday(struct timeval *tv, void* ignored)
+int gettimeofday(struct timeval *tv, void *ignored)
 {
 	FILETIME ft;
 	unsigned __int64 tmp = 0;
-	if (NULL != tv) {
+	if (NULL != tv)
+	{
 		GetSystemTimeAsFileTime(&ft);
 		tmp |= ft.dwHighDateTime;
 		tmp <<= 32;
@@ -124,7 +127,8 @@ int gettimeofday(struct timeval *tv, void* ignored)
 BOOL WINAPI
 sighandler(int signum)
 {
-	if (CTRL_C_EVENT == signum) {
+	if (CTRL_C_EVENT == signum)
+	{
 		fprintf(stderr, "Signal caught, exiting!\n");
 		do_exit = 1;
 		rtlsdr_cancel_async(dev);
@@ -143,27 +147,33 @@ static void sighandler(int signum)
 
 void rtlsdr_callback(unsigned char *buf, uint32_t len, void *ctx)
 {
-	if(!do_exit) {
-		struct llist *rpt = (struct llist*)malloc(sizeof(struct llist));
-		rpt->data = (char*)malloc(len);
+	if (!do_exit)
+	{
+		struct llist *rpt = (struct llist *)malloc(sizeof(struct llist));
+		rpt->data = (char *)malloc(len);
 		memcpy(rpt->data, buf, len);
 		rpt->len = len;
 		rpt->next = NULL;
 
 		pthread_mutex_lock(&ll_mutex);
 
-		if (ll_buffers == NULL) {
+		if (ll_buffers == NULL)
+		{
 			ll_buffers = rpt;
-		} else {
+		}
+		else
+		{
 			struct llist *cur = ll_buffers;
 			int num_queued = 0;
 
-			while (cur->next != NULL) {
+			while (cur->next != NULL)
+			{
 				cur = cur->next;
 				num_queued++;
 			}
 
-			if(llbuf_num && llbuf_num == num_queued-2){
+			if (llbuf_num && llbuf_num == num_queued - 2)
+			{
 				struct llist *curelem;
 
 				free(ll_buffers->data);
@@ -188,24 +198,26 @@ void rtlsdr_callback(unsigned char *buf, uint32_t len, void *ctx)
 
 static void *tcp_worker(void *arg)
 {
-	struct llist *curelem,*prev;
-	int bytesleft,bytessent, index;
-	struct timeval tv= {1,0};
+	struct llist *curelem, *prev;
+	int bytesleft, bytessent, index;
+	struct timeval tv = {1, 0};
 	struct timespec ts;
 	struct timeval tp;
 	fd_set writefds;
 	int r = 0;
 
-	while(1) {
-		if(do_exit)
+	while (1)
+	{
+		if (do_exit)
 			pthread_exit(0);
 
 		pthread_mutex_lock(&ll_mutex);
 		gettimeofday(&tp, NULL);
-		ts.tv_sec  = tp.tv_sec+5;
+		ts.tv_sec = tp.tv_sec + 5;
 		ts.tv_nsec = tp.tv_usec * 1000;
 		r = pthread_cond_timedwait(&cond, &ll_mutex, &ts);
-		if(r == ETIMEDOUT) {
+		if (r == ETIMEDOUT)
+		{
 			pthread_mutex_unlock(&ll_mutex);
 			printf("worker cond timeout\n");
 			sighandler(0);
@@ -216,25 +228,29 @@ static void *tcp_worker(void *arg)
 		ll_buffers = 0;
 		pthread_mutex_unlock(&ll_mutex);
 
-		while(curelem != 0) {
+		while (curelem != 0)
+		{
 			bytesleft = curelem->len;
 			index = 0;
 			bytessent = 0;
-			while(bytesleft > 0) {
+			while (bytesleft > 0)
+			{
 				FD_ZERO(&writefds);
 				FD_SET(s, &writefds);
 				tv.tv_sec = 1;
 				tv.tv_usec = 0;
-				r = select(s+1, NULL, &writefds, NULL, &tv);
-				if(r) {
-					bytessent = send(s,  &curelem->data[index], bytesleft, 0);
+				r = select(s + 1, NULL, &writefds, NULL, &tv);
+				if (r)
+				{
+					bytessent = send(s, &curelem->data[index], bytesleft, 0);
 					bytesleft -= bytessent;
 					index += bytessent;
 				}
-				if(bytessent == SOCKET_ERROR || do_exit) {
-						printf("worker socket bye\n");
-						sighandler(0);
-						pthread_exit(NULL);
+				if (bytessent == SOCKET_ERROR || do_exit)
+				{
+					printf("worker socket bye\n");
+					sighandler(0);
+					pthread_exit(NULL);
 				}
 			}
 			prev = curelem;
@@ -248,10 +264,11 @@ static void *tcp_worker(void *arg)
 static int set_gain_by_index(rtlsdr_dev_t *_dev, unsigned int index)
 {
 	int res = 0;
-	int* gains;
+	int *gains;
 	int count = rtlsdr_get_tuner_gains(_dev, NULL);
 
-	if (count > 0 && (unsigned int)count > index) {
+	if (count > 0 && (unsigned int)count > index)
+	{
 		gains = malloc(sizeof(int) * count);
 		count = rtlsdr_get_tuner_gains(_dev, gains);
 
@@ -267,10 +284,11 @@ static int set_gain_by_index(rtlsdr_dev_t *_dev, unsigned int index)
 #define __attribute__(x)
 #pragma pack(push, 1)
 #endif
-struct command{
+struct command
+{
 	unsigned char cmd;
 	unsigned int param;
-}__attribute__((packed));
+} __attribute__((packed));
 #ifdef _WIN32
 #pragma pack(pop)
 #endif
@@ -278,33 +296,38 @@ static void *command_worker(void *arg)
 {
 	int left, received = 0;
 	fd_set readfds;
-	struct command cmd={0, 0};
-	struct timeval tv= {1, 0};
+	struct command cmd = {0, 0};
+	struct timeval tv = {1, 0};
 	int r = 0;
 	uint32_t tmp;
 
-	while(1) {
-		left=sizeof(cmd);
-		while(left >0) {
+	while (1)
+	{
+		left = sizeof(cmd);
+		while (left > 0)
+		{
 			FD_ZERO(&readfds);
 			FD_SET(s, &readfds);
 			tv.tv_sec = 1;
 			tv.tv_usec = 0;
-			r = select(s+1, &readfds, NULL, NULL, &tv);
-			if(r) {
-				received = recv(s, (char*)&cmd+(sizeof(cmd)-left), left, 0);
+			r = select(s + 1, &readfds, NULL, NULL, &tv);
+			if (r)
+			{
+				received = recv(s, (char *)&cmd + (sizeof(cmd) - left), left, 0);
 				left -= received;
 			}
-			if(received == SOCKET_ERROR || do_exit) {
+			if (received == SOCKET_ERROR || do_exit)
+			{
 				printf("comm recv bye\n");
 				sighandler(0);
 				pthread_exit(NULL);
 			}
 		}
-		switch(cmd.cmd) {
+		switch (cmd.cmd)
+		{
 		case 0x01:
 			printf("set freq %d\n", ntohl(cmd.param));
-			rtlsdr_set_center_freq(dev,ntohl(cmd.param));
+			rtlsdr_set_center_freq(dev, ntohl(cmd.param));
 			break;
 		case 0x02:
 			printf("set sample rate %d\n", ntohl(cmd.param));
@@ -365,7 +388,7 @@ static void *command_worker(void *arg)
 int main(int argc, char **argv)
 {
 	int r, opt, i;
-	char* addr = "127.0.0.1";
+	char *addr = "127.0.0.1";
 	int port = 1234;
 	uint32_t frequency = 100000000, samp_rate = 2048000;
 	struct sockaddr_in local, remote;
@@ -374,11 +397,11 @@ int main(int argc, char **argv)
 	int dev_given = 0;
 	int gain = 0;
 	int ppm_error = 0;
-	struct llist *curelem,*prev;
+	struct llist *curelem, *prev;
 	pthread_attr_t attr;
 	void *status;
-	struct timeval tv = {1,0};
-	struct linger ling = {1,0};
+	struct timeval tv = {1, 0};
+	struct linger ling = {1, 0};
 	SOCKET listensocket;
 	socklen_t rlen;
 	fd_set readfds;
@@ -386,13 +409,15 @@ int main(int argc, char **argv)
 	dongle_info_t dongle_info;
 #ifdef _WIN32
 	WSADATA wsd;
-	i = WSAStartup(MAKEWORD(2,2), &wsd);
+	i = WSAStartup(MAKEWORD(2, 2), &wsd);
 #else
 	struct sigaction sigact, sigign;
 #endif
 
-	while ((opt = getopt(argc, argv, "a:p:f:g:s:b:n:d:P:")) != -1) {
-		switch (opt) {
+	while ((opt = getopt(argc, argv, "a:p:f:g:s:b:n:d:P:")) != -1)
+	{
+		switch (opt)
+		{
 		case 'd':
 			dev_index = verbose_device_search(optarg);
 			dev_given = 1;
@@ -430,17 +455,20 @@ int main(int argc, char **argv)
 	if (argc < optind)
 		usage();
 
-	if (!dev_given) {
+	if (!dev_given)
+	{
 		dev_index = verbose_device_search("0");
 	}
 
-	if (dev_index < 0) {
-	    exit(1);
+	if (dev_index < 0)
+	{
+		exit(1);
 	}
 
 	rtlsdr_open(&dev, (uint32_t)dev_index);
-	if (NULL == dev) {
-	fprintf(stderr, "Failed to open rtlsdr device #%d.\n", dev_index);
+	if (NULL == dev)
+	{
+		fprintf(stderr, "Failed to open rtlsdr device #%d.\n", dev_index);
 		exit(1);
 	}
 
@@ -454,7 +482,7 @@ int main(int argc, char **argv)
 	sigaction(SIGQUIT, &sigact, NULL);
 	sigaction(SIGPIPE, &sigign, NULL);
 #else
-	SetConsoleCtrlHandler( (PHANDLER_ROUTINE) sighandler, TRUE );
+	SetConsoleCtrlHandler((PHANDLER_ROUTINE)sighandler, TRUE);
 #endif
 
 	/* Set the tuner error */
@@ -472,12 +500,15 @@ int main(int argc, char **argv)
 	else
 		fprintf(stderr, "Tuned to %i Hz.\n", frequency);
 
-	if (0 == gain) {
-		 /* Enable automatic gain */
+	if (0 == gain)
+	{
+		/* Enable automatic gain */
 		r = rtlsdr_set_tuner_gain_mode(dev, 0);
 		if (r < 0)
 			fprintf(stderr, "WARNING: Failed to enable automatic gain.\n");
-	} else {
+	}
+	else
+	{
 		/* Enable manual gain */
 		r = rtlsdr_set_tuner_gain_mode(dev, 1);
 		if (r < 0)
@@ -488,7 +519,7 @@ int main(int argc, char **argv)
 		if (r < 0)
 			fprintf(stderr, "WARNING: Failed to set tuner gain.\n");
 		else
-			fprintf(stderr, "Tuner gain set to %f dB.\n", gain/10.0);
+			fprintf(stderr, "Tuner gain set to %f dB.\n", gain / 10.0);
 	}
 
 	/* Reset endpoint before we start reading from it (mandatory) */
@@ -502,7 +533,7 @@ int main(int argc, char **argv)
 	pthread_cond_init(&cond, NULL);
 	pthread_cond_init(&exit_cond, NULL);
 
-	memset(&local,0,sizeof(local));
+	memset(&local, 0, sizeof(local));
 	local.sin_family = AF_INET;
 	local.sin_port = htons(port);
 	local.sin_addr.s_addr = inet_addr(addr);
@@ -511,7 +542,7 @@ int main(int argc, char **argv)
 	r = 1;
 	setsockopt(listensocket, SOL_SOCKET, SO_REUSEADDR, (char *)&r, sizeof(int));
 	setsockopt(listensocket, SOL_SOCKET, SO_LINGER, (char *)&ling, sizeof(ling));
-	bind(listensocket,(struct sockaddr *)&local,sizeof(local));
+	bind(listensocket, (struct sockaddr *)&local, sizeof(local));
 
 #ifdef _WIN32
 	ioctlsocket(listensocket, FIONBIO, &blockmode);
@@ -520,26 +551,31 @@ int main(int argc, char **argv)
 	r = fcntl(listensocket, F_SETFL, r | O_NONBLOCK);
 #endif
 
-	while(1) {
+	while (1)
+	{
 		printf("listening...\n");
 		printf("Use the device argument 'rtl_tcp=%s:%d' in OsmoSDR "
-		       "(gr-osmosdr) source\n"
-		       "to receive samples in GRC and control "
-		       "rtl_tcp parameters (frequency, gain, ...).\n",
-		       addr, port);
-		listen(listensocket,1);
+			   "(gr-osmosdr) source\n"
+			   "to receive samples in GRC and control "
+			   "rtl_tcp parameters (frequency, gain, ...).\n",
+			   addr, port);
+		listen(listensocket, 1);
 
-		while(1) {
+		while (1)
+		{
 			FD_ZERO(&readfds);
 			FD_SET(listensocket, &readfds);
 			tv.tv_sec = 1;
 			tv.tv_usec = 0;
-			r = select(listensocket+1, &readfds, NULL, NULL, &tv);
-			if(do_exit) {
+			r = select(listensocket + 1, &readfds, NULL, NULL, &tv);
+			if (do_exit)
+			{
 				goto out;
-			} else if(r) {
+			}
+			else if (r)
+			{
 				rlen = sizeof(remote);
-				s = accept(listensocket,(struct sockaddr *)&remote, &rlen);
+				s = accept(listensocket, (struct sockaddr *)&remote, &rlen);
 				break;
 			}
 		}
@@ -580,7 +616,8 @@ int main(int argc, char **argv)
 		curelem = ll_buffers;
 		ll_buffers = 0;
 
-		while(curelem != 0) {
+		while (curelem != 0)
+		{
 			prev = curelem;
 			curelem = curelem->next;
 			free(prev->data);
