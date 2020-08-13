@@ -43,15 +43,15 @@
 #include "rtl-sdr.h"
 #include "convenience/convenience.h"
 
-#define DEFAULT_SAMPLE_RATE		2048000
-#define DEFAULT_BUF_LENGTH		(16 * 16384)
-#define MINIMAL_BUF_LENGTH		512
-#define MAXIMAL_BUF_LENGTH		(256 * 16384)
+#define DEFAULT_SAMPLE_RATE 2048000
+#define DEFAULT_BUF_LENGTH (16 * 16384)
+#define MINIMAL_BUF_LENGTH 512
+#define MAXIMAL_BUF_LENGTH (256 * 16384)
 
-#define MHZ(x)	((x)*1000*1000)
+#define MHZ(x) ((x)*1000 * 1000)
 
-#define PPM_DURATION			10
-#define PPM_DUMP_TIME			5
+#define PPM_DURATION 10
+#define PPM_DUMP_TIME 5
 
 static enum {
 	NO_BENCHMARK,
@@ -72,16 +72,16 @@ static unsigned int ppm_duration = PPM_DURATION;
 void usage(void)
 {
 	fprintf(stderr,
-		"rtl_test, a benchmark tool for RTL2832 based DVB-T receivers\n\n"
-		"Usage:\n"
-		"\t[-s samplerate (default: 2048000 Hz)]\n"
-		"\t[-d device_index (default: 0)]\n"
-		"\t[-t enable Elonics E4000 tuner benchmark]\n"
+			"rtl_test, a benchmark tool for RTL2832 based DVB-T receivers\n\n"
+			"Usage:\n"
+			"\t[-s samplerate (default: 2048000 Hz)]\n"
+			"\t[-d device_index (default: 0)]\n"
+			"\t[-t enable Elonics E4000 tuner benchmark]\n"
 #ifndef _WIN32
-		"\t[-p[seconds] enable PPM error measurement (default: 10 seconds)]\n"
+			"\t[-p[seconds] enable PPM error measurement (default: 10 seconds)]\n"
 #endif
-		"\t[-b output_block_size (default: 16 * 16384)]\n"
-		"\t[-S force sync output (default: async)]\n");
+			"\t[-b output_block_size (default: 16 * 16384)]\n"
+			"\t[-S force sync output (default: async)]\n");
 	exit(1);
 }
 
@@ -89,7 +89,8 @@ void usage(void)
 BOOL WINAPI
 sighandler(int signum)
 {
-	if (CTRL_C_EVENT == signum) {
+	if (CTRL_C_EVENT == signum)
+	{
 		fprintf(stderr, "Signal caught, exiting!\n");
 		do_exit = 1;
 		rtlsdr_cancel_async(dev);
@@ -111,12 +112,15 @@ static void underrun_test(unsigned char *buf, uint32_t len, int mute)
 	uint32_t i, lost = 0;
 	static uint8_t bcnt, uninit = 1;
 
-	if (uninit) {
+	if (uninit)
+	{
 		bcnt = buf[0];
 		uninit = 0;
 	}
-	for (i = 0; i < len; i++) {
-		if(bcnt != buf[i]) {
+	for (i = 0; i < len; i++)
+	{
+		if (bcnt != buf[i])
+		{
 			lost += (buf[i] > bcnt) ? (buf[i] - bcnt) : (bcnt - buf[i]);
 			bcnt = buf[i];
 		}
@@ -130,7 +134,6 @@ static void underrun_test(unsigned char *buf, uint32_t len, int mute)
 		return;
 	if (lost)
 		printf("lost at least %d bytes\n", lost);
-
 }
 
 #ifndef _WIN32
@@ -174,7 +177,8 @@ static void ppm_test(uint32_t len)
 	} ppm_init = PPM_INIT_NO;
 
 	ppm_gettime(&ppm_now);
-	if (ppm_init != PPM_INIT_RUN) {
+	if (ppm_init != PPM_INIT_RUN)
+	{
 		/*
 		 * Kyle Keen wrote:
 		 * PPM_DUMP_TIME throws out the first N seconds of data.
@@ -182,7 +186,8 @@ static void ppm_test(uint32_t len)
 		 * typically incorrect by more than twice the final value.
 		 * Discarding the first few seconds allows the value to stabilize much faster.
 		*/
-		if (ppm_init == PPM_INIT_NO) {
+		if (ppm_init == PPM_INIT_NO)
+		{
 			ppm_recent.tv_sec = ppm_now.tv_sec + PPM_DUMP_TIME;
 			ppm_init = PPM_INIT_DUMP;
 			return;
@@ -203,9 +208,9 @@ static void ppm_test(uint32_t len)
 	nsamples_total += nsamples;
 	interval_total += interval;
 	printf("real sample rate: %i current PPM: %i cumulative PPM: %i\n",
-		(int)((1000000000UL * nsamples) / interval),
-		ppm_report(nsamples, interval),
-		ppm_report(nsamples_total, interval_total));
+		   (int)((1000000000UL * nsamples) / interval),
+		   ppm_report(nsamples, interval),
+		   ppm_report(nsamples_total, interval_total));
 	ppm_recent.tv_sec = ppm_now.tv_sec;
 	ppm_recent.tv_nsec = ppm_now.tv_nsec;
 	nsamples = 0;
@@ -229,42 +234,50 @@ void e4k_benchmark(void)
 	fprintf(stderr, "Benchmarking E4000 PLL...\n");
 
 	/* find tuner range start */
-	for (freq = MHZ(70); freq > MHZ(1); freq -= MHZ(1)) {
-		if (rtlsdr_set_center_freq(dev, freq) < 0) {
+	for (freq = MHZ(70); freq > MHZ(1); freq -= MHZ(1))
+	{
+		if (rtlsdr_set_center_freq(dev, freq) < 0)
+		{
 			range_start = freq;
 			break;
 		}
 	}
 
 	/* find tuner range end */
-	for (freq = MHZ(2000); freq < MHZ(2300UL); freq += MHZ(1)) {
-		if (rtlsdr_set_center_freq(dev, freq) < 0) {
+	for (freq = MHZ(2000); freq < MHZ(2300UL); freq += MHZ(1))
+	{
+		if (rtlsdr_set_center_freq(dev, freq) < 0)
+		{
 			range_end = freq;
 			break;
 		}
 	}
 
 	/* find start of L-band gap */
-	for (freq = MHZ(1000); freq < MHZ(1300); freq += MHZ(1)) {
-		if (rtlsdr_set_center_freq(dev, freq) < 0) {
+	for (freq = MHZ(1000); freq < MHZ(1300); freq += MHZ(1))
+	{
+		if (rtlsdr_set_center_freq(dev, freq) < 0)
+		{
 			gap_start = freq;
 			break;
 		}
 	}
 
 	/* find end of L-band gap */
-	for (freq = MHZ(1300); freq > MHZ(1000); freq -= MHZ(1)) {
-		if (rtlsdr_set_center_freq(dev, freq) < 0) {
+	for (freq = MHZ(1300); freq > MHZ(1000); freq -= MHZ(1))
+	{
+		if (rtlsdr_set_center_freq(dev, freq) < 0)
+		{
 			gap_end = freq;
 			break;
 		}
 	}
 
 	fprintf(stderr, "E4K range: %i to %i MHz\n",
-		range_start/MHZ(1) + 1, range_end/MHZ(1) - 1);
+			range_start / MHZ(1) + 1, range_end / MHZ(1) - 1);
 
 	fprintf(stderr, "E4K L-band gap: %i to %i MHz\n",
-		gap_start/MHZ(1), gap_end/MHZ(1));
+			gap_start / MHZ(1), gap_end / MHZ(1));
 }
 
 int main(int argc, char **argv)
@@ -281,8 +294,10 @@ int main(int argc, char **argv)
 	int count;
 	int gains[100];
 
-	while ((opt = getopt(argc, argv, "d:s:b:tp::Sh")) != -1) {
-		switch (opt) {
+	while ((opt = getopt(argc, argv, "d:s:b:tp::Sh")) != -1)
+	{
+		switch (opt)
+		{
 		case 'd':
 			dev_index = verbose_device_search(optarg);
 			dev_given = 1;
@@ -311,29 +326,33 @@ int main(int argc, char **argv)
 		}
 	}
 
-	if(out_block_size < MINIMAL_BUF_LENGTH ||
-	   out_block_size > MAXIMAL_BUF_LENGTH ){
+	if (out_block_size < MINIMAL_BUF_LENGTH ||
+		out_block_size > MAXIMAL_BUF_LENGTH)
+	{
 		fprintf(stderr,
-			"Output block size wrong value, falling back to default\n");
+				"Output block size wrong value, falling back to default\n");
 		fprintf(stderr,
-			"Minimal length: %u\n", MINIMAL_BUF_LENGTH);
+				"Minimal length: %u\n", MINIMAL_BUF_LENGTH);
 		fprintf(stderr,
-			"Maximal length: %u\n", MAXIMAL_BUF_LENGTH);
+				"Maximal length: %u\n", MAXIMAL_BUF_LENGTH);
 		out_block_size = DEFAULT_BUF_LENGTH;
 	}
 
 	buffer = malloc(out_block_size * sizeof(uint8_t));
 
-	if (!dev_given) {
+	if (!dev_given)
+	{
 		dev_index = verbose_device_search("0");
 	}
 
-	if (dev_index < 0) {
+	if (dev_index < 0)
+	{
 		exit(1);
 	}
 
 	r = rtlsdr_open(&dev, (uint32_t)dev_index);
-	if (r < 0) {
+	if (r < 0)
+	{
 		fprintf(stderr, "Failed to open rtlsdr device #%d.\n", dev_index);
 		exit(1);
 	}
@@ -346,7 +365,7 @@ int main(int argc, char **argv)
 	sigaction(SIGQUIT, &sigact, NULL);
 	sigaction(SIGPIPE, &sigact, NULL);
 #else
-	SetConsoleCtrlHandler( (PHANDLER_ROUTINE) sighandler, TRUE );
+	SetConsoleCtrlHandler((PHANDLER_ROUTINE)sighandler, TRUE);
 #endif
 	count = rtlsdr_get_tuner_gains(dev, NULL);
 	fprintf(stderr, "Supported gain values (%d): ", count);
@@ -359,7 +378,8 @@ int main(int argc, char **argv)
 	/* Set the sample rate */
 	verbose_set_sample_rate(dev, samp_rate);
 
-	if (test_mode == TUNER_BENCHMARK) {
+	if (test_mode == TUNER_BENCHMARK)
+	{
 		if (rtlsdr_get_tuner_type(dev) == RTLSDR_TUNER_E4000)
 			e4k_benchmark();
 		else
@@ -374,41 +394,50 @@ int main(int argc, char **argv)
 	/* Reset endpoint before we start reading from it (mandatory) */
 	verbose_reset_buffer(dev);
 
-	if ((test_mode == PPM_BENCHMARK) && !sync_mode) {
+	if ((test_mode == PPM_BENCHMARK) && !sync_mode)
+	{
 		fprintf(stderr, "Reporting PPM error measurement every %i seconds...\n", ppm_duration);
 		fprintf(stderr, "Press ^C after a few minutes.\n");
 	}
 
-	if (test_mode == NO_BENCHMARK) {
+	if (test_mode == NO_BENCHMARK)
+	{
 		fprintf(stderr, "\nInfo: This tool will continuously"
-				" read from the device, and report if\n"
-				"samples get lost. If you observe no "
-				"further output, everything is fine.\n\n");
+						" read from the device, and report if\n"
+						"samples get lost. If you observe no "
+						"further output, everything is fine.\n\n");
 	}
 
-	if (sync_mode) {
+	if (sync_mode)
+	{
 		fprintf(stderr, "Reading samples in sync mode...\n");
 		fprintf(stderr, "(Samples are being lost but not reported.)\n");
-		while (!do_exit) {
+		while (!do_exit)
+		{
 			r = rtlsdr_read_sync(dev, buffer, out_block_size, &n_read);
-			if (r < 0) {
+			if (r < 0)
+			{
 				fprintf(stderr, "WARNING: sync read failed.\n");
 				break;
 			}
 
-			if ((uint32_t)n_read < out_block_size) {
+			if ((uint32_t)n_read < out_block_size)
+			{
 				fprintf(stderr, "Short read, samples lost, exiting!\n");
 				break;
 			}
 			underrun_test(buffer, n_read, 1);
 		}
-	} else {
+	}
+	else
+	{
 		fprintf(stderr, "Reading samples in async mode...\n");
 		r = rtlsdr_read_async(dev, rtlsdr_callback, NULL,
-				      0, out_block_size);
+							  0, out_block_size);
 	}
 
-	if (do_exit) {
+	if (do_exit)
+	{
 		fprintf(stderr, "\nUser cancel, exiting...\n");
 		fprintf(stderr, "Samples per million lost (minimum): %i\n", (int)(1000000L * dropped_samples / total_samples));
 	}
@@ -417,7 +446,7 @@ int main(int argc, char **argv)
 
 exit:
 	rtlsdr_close(dev);
-	free (buffer);
+	free(buffer);
 
 	return r >= 0 ? r : -r;
 }

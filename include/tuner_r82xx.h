@@ -25,23 +25,24 @@
 #ifndef R82XX_H
 #define R82XX_H
 
-#define R820T_I2C_ADDR		0x34
-#define R828D_I2C_ADDR		0x74
-#define R828D_XTAL_FREQ		16000000
+#define R820T_I2C_ADDR 0x34
+#define R828D_I2C_ADDR 0x74
+#define R828D_XTAL_FREQ 16000000
 
-#define R82XX_CHECK_ADDR	0x00
-#define R82XX_CHECK_VAL		0x69
+#define R82XX_CHECK_ADDR 0x00
+#define R82XX_CHECK_VAL 0x69
 
-#define R82XX_IF_FREQ		3570000
+#define R82XX_IF_FREQ 3570000
 
-#define REG_SHADOW_START	5
-#define NUM_REGS		30
-#define NUM_IMR			5
-#define IMR_TRIAL		9
+#define REG_SHADOW_START 5
+#define NUM_REGS 30
+#define NUM_IMR 5
+#define IMR_TRIAL 9
 
-#define VER_NUM			49
+#define VER_NUM 49
 
-enum r82xx_chip {
+enum r82xx_chip
+{
 	CHIP_R820T,
 	CHIP_R620D,
 	CHIP_R828D,
@@ -50,13 +51,15 @@ enum r82xx_chip {
 	CHIP_R820C,
 };
 
-enum r82xx_tuner_type {
+enum r82xx_tuner_type
+{
 	TUNER_RADIO = 1,
 	TUNER_ANALOG_TV,
 	TUNER_DIGITAL_TV
 };
 
-enum r82xx_xtal_cap_value {
+enum r82xx_xtal_cap_value
+{
 	XTAL_LOW_CAP_30P = 0,
 	XTAL_LOW_CAP_20P,
 	XTAL_LOW_CAP_10P,
@@ -64,7 +67,8 @@ enum r82xx_xtal_cap_value {
 	XTAL_HIGH_CAP_0P
 };
 
-struct r82xx_config {
+struct r82xx_config
+{
 	uint8_t i2c_addr;
 	uint32_t xtal;
 	enum r82xx_chip rafael_chip;
@@ -72,39 +76,42 @@ struct r82xx_config {
 	int use_predetect;
 };
 
-struct r82xx_priv {
-	struct r82xx_config		*cfg;
+struct r82xx_priv
+{
+	struct r82xx_config *cfg;
 
-	uint8_t				regs[NUM_REGS];
-	uint8_t				buf[NUM_REGS + 1];
-	enum r82xx_xtal_cap_value	xtal_cap_sel;
-	uint16_t			pll;	/* kHz */
-	uint32_t			int_freq;
-	uint8_t				fil_cal_code;
-	uint8_t				input;
-	int				has_lock;
-	int				init_done;
+	uint8_t regs[NUM_REGS];
+	uint8_t buf[NUM_REGS + 1];
+	enum r82xx_xtal_cap_value xtal_cap_sel;
+	uint16_t pll; /* kHz */
+	uint32_t int_freq;
+	uint8_t fil_cal_code;
+	uint8_t input;
+	int has_lock;
+	int init_done;
 
 	/* Store current mode */
-	uint32_t			delsys;
-	enum r82xx_tuner_type		type;
+	uint32_t delsys;
+	enum r82xx_tuner_type type;
 
-	uint32_t			bw;	/* in MHz */
+	uint32_t bw; /* in MHz */
 
 	void *rtl_dev;
 };
 
-struct r82xx_freq_range {
-	uint32_t	freq;
-	uint8_t		open_d;
-	uint8_t		rf_mux_ploy;
-	uint8_t		tf_c;
-	uint8_t		xtal_cap20p;
-	uint8_t		xtal_cap10p;
-	uint8_t		xtal_cap0p;
+struct r82xx_freq_range
+{
+	uint32_t freq;
+	uint8_t open_d;
+	uint8_t rf_mux_ploy;
+	uint8_t tf_c;
+	uint8_t xtal_cap20p;
+	uint8_t xtal_cap10p;
+	uint8_t xtal_cap0p;
 };
 
-enum r82xx_delivery_system {
+enum r82xx_delivery_system
+{
 	SYS_UNDEFINED,
 	SYS_DVBT,
 	SYS_DVBT2,
@@ -115,6 +122,6 @@ int r82xx_standby(struct r82xx_priv *priv);
 int r82xx_init(struct r82xx_priv *priv);
 int r82xx_set_freq(struct r82xx_priv *priv, uint32_t freq);
 int r82xx_set_gain(struct r82xx_priv *priv, int set_manual_gain, int gain);
-int r82xx_set_bandwidth(struct r82xx_priv *priv, int bandwidth,  uint32_t rate);
+int r82xx_set_bandwidth(struct r82xx_priv *priv, int bandwidth, uint32_t rate);
 
 #endif

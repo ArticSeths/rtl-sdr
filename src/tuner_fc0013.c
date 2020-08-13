@@ -62,30 +62,30 @@ int fc0013_init(void *dev)
 	int ret = 0;
 	unsigned int i;
 	uint8_t reg[] = {
-		0x00,	/* reg. 0x00: dummy */
-		0x09,	/* reg. 0x01 */
-		0x16,	/* reg. 0x02 */
-		0x00,	/* reg. 0x03 */
-		0x00,	/* reg. 0x04 */
-		0x17,	/* reg. 0x05 */
-		0x02,	/* reg. 0x06: LPF bandwidth */
-		0x0a,	/* reg. 0x07: CHECK */
-		0xff,	/* reg. 0x08: AGC Clock divide by 256, AGC gain 1/256,
+		0x00, /* reg. 0x00: dummy */
+		0x09, /* reg. 0x01 */
+		0x16, /* reg. 0x02 */
+		0x00, /* reg. 0x03 */
+		0x00, /* reg. 0x04 */
+		0x17, /* reg. 0x05 */
+		0x02, /* reg. 0x06: LPF bandwidth */
+		0x0a, /* reg. 0x07: CHECK */
+		0xff, /* reg. 0x08: AGC Clock divide by 256, AGC gain 1/256,
 			   Loop Bw 1/8 */
-		0x6e,	/* reg. 0x09: Disable LoopThrough, Enable LoopThrough: 0x6f */
-		0xb8,	/* reg. 0x0a: Disable LO Test Buffer */
-		0x82,	/* reg. 0x0b: CHECK */
-		0xfc,	/* reg. 0x0c: depending on AGC Up-Down mode, may need 0xf8 */
-		0x01,	/* reg. 0x0d: AGC Not Forcing & LNA Forcing, may need 0x02 */
-		0x00,	/* reg. 0x0e */
-		0x00,	/* reg. 0x0f */
-		0x00,	/* reg. 0x10 */
-		0x00,	/* reg. 0x11 */
-		0x00,	/* reg. 0x12 */
-		0x00,	/* reg. 0x13 */
-		0x50,	/* reg. 0x14: DVB-t High Gain, UHF.
+		0x6e, /* reg. 0x09: Disable LoopThrough, Enable LoopThrough: 0x6f */
+		0xb8, /* reg. 0x0a: Disable LO Test Buffer */
+		0x82, /* reg. 0x0b: CHECK */
+		0xfc, /* reg. 0x0c: depending on AGC Up-Down mode, may need 0xf8 */
+		0x01, /* reg. 0x0d: AGC Not Forcing & LNA Forcing, may need 0x02 */
+		0x00, /* reg. 0x0e */
+		0x00, /* reg. 0x0f */
+		0x00, /* reg. 0x10 */
+		0x00, /* reg. 0x11 */
+		0x00, /* reg. 0x12 */
+		0x00, /* reg. 0x13 */
+		0x50, /* reg. 0x14: DVB-t High Gain, UHF.
 			   Middle Gain: 0x48, Low Gain: 0x40 */
-		0x01,	/* reg. 0x15 */
+		0x01, /* reg. 0x15 */
 	};
 #if 0
 	switch (rtlsdr_get_tuner_clock(dev)) {
@@ -100,10 +100,11 @@ int fc0013_init(void *dev)
 #endif
 	reg[0x07] |= 0x20;
 
-//	if (dev->dual_master)
+	//	if (dev->dual_master)
 	reg[0x0c] |= 0x02;
 
-	for (i = 1; i < sizeof(reg); i++) {
+	for (i = 1; i < sizeof(reg); i++)
+	{
 		ret = fc0013_writereg(dev, i, reg[i]);
 		if (ret < 0)
 			break;
@@ -169,21 +170,36 @@ static int fc0013_set_vhf_track(void *dev, uint32_t freq)
 	if (ret)
 		goto error_out;
 	tmp &= 0xe3;
-	if (freq <= 177500000) {		/* VHF Track: 7 */
+	if (freq <= 177500000)
+	{ /* VHF Track: 7 */
 		ret = fc0013_writereg(dev, 0x1d, tmp | 0x1c);
-	} else if (freq <= 184500000) {	/* VHF Track: 6 */
+	}
+	else if (freq <= 184500000)
+	{ /* VHF Track: 6 */
 		ret = fc0013_writereg(dev, 0x1d, tmp | 0x18);
-	} else if (freq <= 191500000) {	/* VHF Track: 5 */
+	}
+	else if (freq <= 191500000)
+	{ /* VHF Track: 5 */
 		ret = fc0013_writereg(dev, 0x1d, tmp | 0x14);
-	} else if (freq <= 198500000) {	/* VHF Track: 4 */
+	}
+	else if (freq <= 198500000)
+	{ /* VHF Track: 4 */
 		ret = fc0013_writereg(dev, 0x1d, tmp | 0x10);
-	} else if (freq <= 205500000) {	/* VHF Track: 3 */
+	}
+	else if (freq <= 205500000)
+	{ /* VHF Track: 3 */
 		ret = fc0013_writereg(dev, 0x1d, tmp | 0x0c);
-	} else if (freq <= 219500000) {	/* VHF Track: 2 */
+	}
+	else if (freq <= 219500000)
+	{ /* VHF Track: 2 */
 		ret = fc0013_writereg(dev, 0x1d, tmp | 0x08);
-	} else if (freq < 300000000) {		/* VHF Track: 1 */
+	}
+	else if (freq < 300000000)
+	{ /* VHF Track: 1 */
 		ret = fc0013_writereg(dev, 0x1d, tmp | 0x04);
-	} else {				/* UHF and GPS */
+	}
+	else
+	{ /* UHF and GPS */
 		ret = fc0013_writereg(dev, 0x1d, tmp | 0x1c);
 	}
 
@@ -207,7 +223,8 @@ int fc0013_set_params(void *dev, uint32_t freq, uint32_t bandwidth)
 	if (ret)
 		goto exit;
 
-	if (freq < 300000000) {
+	if (freq < 300000000)
+	{
 		/* enable VHF filter */
 		ret = fc0013_readreg(dev, 0x07, &tmp);
 		if (ret)
@@ -223,7 +240,9 @@ int fc0013_set_params(void *dev, uint32_t freq, uint32_t bandwidth)
 		ret = fc0013_writereg(dev, 0x14, tmp & 0x1f);
 		if (ret)
 			goto exit;
-	} else if (freq <= 862000000) {
+	}
+	else if (freq <= 862000000)
+	{
 		/* disable VHF filter */
 		ret = fc0013_readreg(dev, 0x07, &tmp);
 		if (ret)
@@ -239,7 +258,9 @@ int fc0013_set_params(void *dev, uint32_t freq, uint32_t bandwidth)
 		ret = fc0013_writereg(dev, 0x14, (tmp & 0x1f) | 0x40);
 		if (ret)
 			goto exit;
-	} else {
+	}
+	else
+	{
 		/* disable VHF filter */
 		ret = fc0013_readreg(dev, 0x07, &tmp);
 		if (ret)
@@ -258,47 +279,68 @@ int fc0013_set_params(void *dev, uint32_t freq, uint32_t bandwidth)
 	}
 
 	/* select frequency divider and the frequency of VCO */
-	if (freq < 37084000) {		/* freq * 96 < 3560000000 */
+	if (freq < 37084000)
+	{ /* freq * 96 < 3560000000 */
 		multi = 96;
 		reg[5] = 0x82;
 		reg[6] = 0x00;
-	} else if (freq < 55625000) {	/* freq * 64 < 3560000000 */
+	}
+	else if (freq < 55625000)
+	{ /* freq * 64 < 3560000000 */
 		multi = 64;
 		reg[5] = 0x02;
 		reg[6] = 0x02;
-	} else if (freq < 74167000) {	/* freq * 48 < 3560000000 */
+	}
+	else if (freq < 74167000)
+	{ /* freq * 48 < 3560000000 */
 		multi = 48;
 		reg[5] = 0x42;
 		reg[6] = 0x00;
-	} else if (freq < 111250000) {	/* freq * 32 < 3560000000 */
+	}
+	else if (freq < 111250000)
+	{ /* freq * 32 < 3560000000 */
 		multi = 32;
 		reg[5] = 0x82;
 		reg[6] = 0x02;
-	} else if (freq < 148334000) {	/* freq * 24 < 3560000000 */
+	}
+	else if (freq < 148334000)
+	{ /* freq * 24 < 3560000000 */
 		multi = 24;
 		reg[5] = 0x22;
 		reg[6] = 0x00;
-	} else if (freq < 222500000) {	/* freq * 16 < 3560000000 */
+	}
+	else if (freq < 222500000)
+	{ /* freq * 16 < 3560000000 */
 		multi = 16;
 		reg[5] = 0x42;
 		reg[6] = 0x02;
-	} else if (freq < 296667000) {	/* freq * 12 < 3560000000 */
+	}
+	else if (freq < 296667000)
+	{ /* freq * 12 < 3560000000 */
 		multi = 12;
 		reg[5] = 0x12;
 		reg[6] = 0x00;
-	} else if (freq < 445000000) {	/* freq * 8 < 3560000000 */
+	}
+	else if (freq < 445000000)
+	{ /* freq * 8 < 3560000000 */
 		multi = 8;
 		reg[5] = 0x22;
 		reg[6] = 0x02;
-	} else if (freq < 593334000) {	/* freq * 6 < 3560000000 */
+	}
+	else if (freq < 593334000)
+	{ /* freq * 6 < 3560000000 */
 		multi = 6;
 		reg[5] = 0x0a;
 		reg[6] = 0x00;
-	} else if (freq < 950000000) {	/* freq * 4 < 3800000000 */
+	}
+	else if (freq < 950000000)
+	{ /* freq * 4 < 3800000000 */
 		multi = 4;
 		reg[5] = 0x12;
 		reg[6] = 0x02;
-	} else {
+	}
+	else
+	{
 		multi = 2;
 		reg[5] = 0x0a;
 		reg[6] = 0x02;
@@ -306,7 +348,8 @@ int fc0013_set_params(void *dev, uint32_t freq, uint32_t bandwidth)
 
 	f_vco = freq * multi;
 
-	if (f_vco >= 3060000000U) {
+	if (f_vco >= 3060000000U)
+	{
 		reg[6] |= 0x08;
 		vco_select = 1;
 	}
@@ -319,22 +362,28 @@ int fc0013_set_params(void *dev, uint32_t freq, uint32_t bandwidth)
 	pm = (uint8_t)(xdiv / 8);
 	am = (uint8_t)(xdiv - (8 * pm));
 
-	if (am < 2) {
+	if (am < 2)
+	{
 		am += 8;
 		pm--;
 	}
 
-	if (pm > 31) {
+	if (pm > 31)
+	{
 		reg[1] = am + (8 * (pm - 31));
 		reg[2] = 31;
-	} else {
+	}
+	else
+	{
 		reg[1] = am;
 		reg[2] = pm;
 	}
 
-	if ((reg[1] > 15) || (reg[2] < 0x0b)) {
+	if ((reg[1] > 15) || (reg[2] < 0x0b))
+	{
 		fprintf(stderr, "[FC0013] no valid PLL combination "
-				"found for %u Hz!\n", freq);
+						"found for %u Hz!\n",
+				freq);
 		return -1;
 	}
 
@@ -352,7 +401,8 @@ int fc0013_set_params(void *dev, uint32_t freq, uint32_t bandwidth)
 	reg[4] = xin & 0xff;
 
 	reg[6] &= 0x3f; /* bits 6 and 7 describe the bandwidth */
-	switch (bandwidth) {
+	switch (bandwidth)
+	{
 	case 6000000:
 		reg[6] |= 0x80;
 		break;
@@ -367,7 +417,8 @@ int fc0013_set_params(void *dev, uint32_t freq, uint32_t bandwidth)
 	/* modified for Realtek demod */
 	reg[5] |= 0x07;
 
-	for (i = 1; i <= 6; i++) {
+	for (i = 1; i <= 6; i++)
+	{
 		ret = fc0013_writereg(dev, i, reg[i]);
 		if (ret)
 			goto exit;
@@ -392,8 +443,9 @@ int fc0013_set_params(void *dev, uint32_t freq, uint32_t bandwidth)
 	if (!ret)
 		ret = fc0013_writereg(dev, 0x0e, 0x00);
 
-	if (!ret) {
-//		msleep(10);
+	if (!ret)
+	{
+		//		msleep(10);
 		ret = fc0013_readreg(dev, 0x0e, &tmp);
 	}
 	if (ret)
@@ -402,8 +454,10 @@ int fc0013_set_params(void *dev, uint32_t freq, uint32_t bandwidth)
 	/* vco selection */
 	tmp &= 0x3f;
 
-	if (vco_select) {
-		if (tmp > 0x3c) {
+	if (vco_select)
+	{
+		if (tmp > 0x3c)
+		{
 			reg[6] &= ~0x08;
 			ret = fc0013_writereg(dev, 0x06, reg[6]);
 			if (!ret)
@@ -411,8 +465,11 @@ int fc0013_set_params(void *dev, uint32_t freq, uint32_t bandwidth)
 			if (!ret)
 				ret = fc0013_writereg(dev, 0x0e, 0x00);
 		}
-	} else {
-		if (tmp < 0x02) {
+	}
+	else
+	{
+		if (tmp < 0x02)
+		{
 			reg[6] |= 0x08;
 			ret = fc0013_writereg(dev, 0x06, reg[6]);
 			if (!ret)
@@ -446,34 +503,33 @@ int fc0013_set_gain_mode(void *dev, int manual)
 	return ret;
 }
 
-int fc0013_lna_gains[] ={
-	-99,	0x02,
-	-73,	0x03,
-	-65,	0x05,
-	-63,	0x04,
-	-63,	0x00,
-	-60,	0x07,
-	-58,	0x01,
-	-54,	0x06,
-	58,	0x0f,
-	61,	0x0e,
-	63,	0x0d,
-	65,	0x0c,
-	67,	0x0b,
-	68,	0x0a,
-	70,	0x09,
-	71,	0x08,
-	179,	0x17,
-	181,	0x16,
-	182,	0x15,
-	184,	0x14,
-	186,	0x13,
-	188,	0x12,
-	191,	0x11,
-	197,	0x10
-};
+int fc0013_lna_gains[] = {
+	-99, 0x02,
+	-73, 0x03,
+	-65, 0x05,
+	-63, 0x04,
+	-63, 0x00,
+	-60, 0x07,
+	-58, 0x01,
+	-54, 0x06,
+	58, 0x0f,
+	61, 0x0e,
+	63, 0x0d,
+	65, 0x0c,
+	67, 0x0b,
+	68, 0x0a,
+	70, 0x09,
+	71, 0x08,
+	179, 0x17,
+	181, 0x16,
+	182, 0x15,
+	184, 0x14,
+	186, 0x13,
+	188, 0x12,
+	191, 0x11,
+	197, 0x10};
 
-#define GAIN_CNT	(sizeof(fc0013_lna_gains) / sizeof(int) / 2)
+#define GAIN_CNT (sizeof(fc0013_lna_gains) / sizeof(int) / 2)
 
 int fc0013_set_lna_gain(void *dev, int gain)
 {
@@ -486,9 +542,11 @@ int fc0013_set_lna_gain(void *dev, int gain)
 	/* mask bits off */
 	tmp &= 0xe0;
 
-	for (i = 0; i < GAIN_CNT; i++) {
-		if ((fc0013_lna_gains[i*2] >= gain) || (i+1 == GAIN_CNT)) {
-			tmp |= fc0013_lna_gains[i*2 + 1];
+	for (i = 0; i < GAIN_CNT; i++)
+	{
+		if ((fc0013_lna_gains[i * 2] >= gain) || (i + 1 == GAIN_CNT))
+		{
+			tmp |= fc0013_lna_gains[i * 2 + 1];
 			break;
 		}
 	}

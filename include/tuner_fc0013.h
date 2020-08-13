@@ -25,9 +25,9 @@
 #ifndef _FC0013_H_
 #define _FC0013_H_
 
-#define FC0013_I2C_ADDR		0xc6
-#define FC0013_CHECK_ADDR	0x00
-#define FC0013_CHECK_VAL	0xa3
+#define FC0013_I2C_ADDR 0xc6
+#define FC0013_CHECK_ADDR 0x00
+#define FC0013_CHECK_VAL 0xa3
 
 int fc0013_init(void *dev);
 int fc0013_set_params(void *dev, uint32_t freq, uint32_t bandwidth);
