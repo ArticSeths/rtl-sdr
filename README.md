@@ -1,4 +1,5 @@
 # RTL-SDR
+[![Build Status](https://travis-ci.org/ArticSeths/rtl-sdr.svg?branch=master)](https://travis-ci.org/github/ArticSeths/rtl-sdr)
 Turns your Realtek RTL2832 based DVB dongle into a SDR receiver
 
 ### First configuration
