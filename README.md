@@ -26,6 +26,7 @@ sudo make install
 
 ### Optional cmake params
 -- For install udev rules (to be able to use the dongle as a non-root user), use `-DINSTALL_UDEV_RULES=ON`
+
 -- For building with kernel detach, use `-DDETACH_KERNEL_DRIVER=ON`
 ```
 cmake ../ -DINSTALL_UDEV_RULES=ON -DDETACH_KERNEL_DRIVER=ON
